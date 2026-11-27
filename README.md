@@ -17,7 +17,7 @@ The whole app is a single file, `index.html`, with no build step and no dependen
 - **Step-by-step playback:** Play/Pause, Step, Back, Reset, End, a speed slider, the arrow keys, or click any column of the timeline to jump to that step.
 - **Live memory board:** frames are drawn as memory chips. Each step shows the request, whether it's a hit or a page fault, which page was evicted and why, and which page is next in line to go.
 - **Timeline grid:** the full history of every frame, with faults and hits highlighted.
-- **The race:** fault counts and hit rates for all four algorithms at the current step, plus the winner over the whole string.
+- **The race:** fault counts and hit rates at the current step. With one algorithm selected it shows only that algorithm; the All four view compares them and names the winner.
 - **Faults vs. frames chart:** faults for 1 to 8 frames for each algorithm, with automatic detection of **Belady's anomaly**.
 - **Play as the OS:** a game mode. Whenever memory is full, you pick the page the algorithm would evict. You get points, streak bonuses and feedback on each answer.
 - **Algorithm demos:** each algorithm card has a looping mini simulation showing how it picks a victim, and each header mascot moves in its own style.

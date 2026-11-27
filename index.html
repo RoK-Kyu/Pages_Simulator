@@ -155,6 +155,7 @@ table.grid{border-collapse:separate;border-spacing:3px;font-variant-numeric:tabu
 .row{display:grid;grid-template-columns:66px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;border:3px solid transparent;cursor:pointer;background:none;color:var(--ink);font:inherit;text-align:left;width:100%}
 .row:hover{background:var(--soft)}
 .row.on{border-color:var(--edge);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.cmp{display:flex;width:max-content;align-items:center;margin-top:10px;min-height:44px;padding:0 16px;border-radius:99px;border:3px solid var(--edge);background:var(--sun);color:#1b1340;box-shadow:3px 3px 0 var(--edge);font:700 15px "Fredoka",system-ui,sans-serif;cursor:pointer}
 .row b{font:700 18px "Fredoka",system-ui,sans-serif;color:var(--c)}
 .bar{height:20px;background:var(--soft);border:2.5px solid var(--edge);border-radius:99px;overflow:hidden}
 .bar span{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .25s}
@@ -332,7 +333,7 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
     </section>
     <aside class="side">
       <div class="card">
-        <h2>The race</h2>
+        <h2 id="raceh">The race</h2>
         <p class="lead" id="racelead"></p>
         <div class="race" id="race"></div>
         <p class="win" id="win"></p>
@@ -560,23 +561,30 @@ function renderAll(){
   if(cur){const sc=cur.closest('.scroll');sc.scrollLeft=Math.max(0,cur.offsetLeft-sc.clientWidth/2)}
   renderRace();
 }
+const shown=()=>st.all?ALGS:ALGS.filter(a=>a.id===st.alg);
 function renderRace(){
-  const t=st.t,done=t+1;
-  $('#racelead').textContent=`Faults after ${done} of ${st.ref.length} requests. Bar length is the fault rate so far.`;
-  $('#race').innerHTML=ALGS.map(a=>{
-    const x=runs[a.id][t],rate=x.faults/done,tot=runs[a.id][st.ref.length-1].faults;
-    return `<button class="row ${a.id===st.alg?'on':''}" style="--c:${a.c}" data-a="${a.id}"><b>${a.id}</b><span class="bar"><span style="width:${(rate*100).toFixed(1)}%"></span></span><span class="num"><strong>${x.faults}</strong><small>${Math.round((1-rate)*100)}% hits · ${tot} total</small></span></button>`;
+  const t=st.t,done=t+1,last=st.ref.length-1,list=shown(),one=!st.all;
+  $('#raceh').textContent=one?`${st.alg} scoreboard`:'The race';
+  $('#racelead').textContent=one?`After ${done} of ${st.ref.length} requests. Bar length is the fault rate so far.`:`Faults after ${done} of ${st.ref.length} requests. Bar length is the fault rate so far.`;
+  $('#race').innerHTML=list.map(a=>{
+    const x=runs[a.id][t],rate=x.faults/done,tot=runs[a.id][last].faults;
+    return `<button class="row ${one?'':a.id===st.alg?'':''}" style="--c:${a.c}" data-a="${a.id}"><b>${a.id}</b><span class="bar"><span style="width:${(rate*100).toFixed(1)}%"></span></span><span class="num"><strong>${x.faults}</strong><small>${Math.round((1-rate)*100)}% hits · ${tot} total</small></span></button>`;
   }).join('');
-  const tots=ALGS.map(a=>({id:a.id,f:runs[a.id][st.ref.length-1].faults}));
+  if(one){
+    const tot=runs[st.alg][last].faults;
+    $('#win').innerHTML=`Over the whole string, ${st.alg} gets <b>${tot}</b> faults and ${st.ref.length-tot} hits. <button class="cmp" data-v="all">Compare all four</button>`;
+    return;
+  }
+  const tots=ALGS.map(a=>({id:a.id,f:runs[a.id][last].faults}));
   const min=Math.min(...tots.map(x=>x.f)),best=tots.filter(x=>x.f===min).map(x=>x.id);
   $('#win').textContent=`Over the whole string, ${best.join(' and ')} ${best.length>1?'tie':'wins'} with ${min} faults.`;
-  if(t===st.ref.length-1)document.querySelectorAll('#race .row').forEach(r=>{if(best.includes(r.dataset.a)){r.classList.add('champ');r.querySelector('b').insertAdjacentHTML('beforeend','<span class="tag">Winner</span>')}});
+  if(t===last)document.querySelectorAll('#race .row').forEach(r=>{if(best.includes(r.dataset.a)){r.classList.add('champ');r.querySelector('b').insertAdjacentHTML('beforeend','<span class="tag">Winner</span>')}});
 }
 
 const svg=$('#chart');
 function draw(){
   const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H||!st.ref.length)return;
-  const N=8,data=ALGS.map(a=>({...a,v:Array.from({length:N},(_,i)=>faultsFor(st.ref,i+1,a.id))}));
+  const N=8,data=shown().map(a=>({...a,v:Array.from({length:N},(_,i)=>faultsFor(st.ref,i+1,a.id))}));
   const ymax=st.ref.length,m={l:34,r:W<420?46:58,t:12,b:34};
   const x=i=>m.l+(W-m.l-m.r)*i/(N-1),y=v=>m.t+(H-m.t-m.b)*(1-v/ymax);
   const step=ymax>20?10:ymax>10?5:2;
@@ -595,7 +603,7 @@ function draw(){
   h+=`<text x="${(m.l+W-m.r)/2}" y="${H-0}" text-anchor="middle" dy="-0">frames</text>`;
   svg.innerHTML=h;
   const bel=data.map(d=>{for(let i=0;i<N-1;i++)if(d.v[i+1]>d.v[i])return `${d.id} (${i+1} frames: ${d.v[i]} faults, ${i+2} frames: ${d.v[i+1]})`;return null}).filter(Boolean);
-  $('#belady').textContent=bel.length?`Belady's anomaly: adding a frame makes things worse for ${bel.join('; ')}.`:`No Belady's anomaly here: more frames never adds faults for any algorithm on this string.`;
+  $('#belady').textContent=bel.length?`Belady's anomaly: adding a frame makes things worse for ${bel.join('; ')}.`:`No Belady's anomaly here: more frames never adds faults for ${st.all?'any algorithm':st.alg} on this string.`;
 }
 const ro=new ResizeObserver(draw);ro.observe(svg);
 
