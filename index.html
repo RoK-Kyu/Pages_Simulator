@@ -27,9 +27,18 @@ h1,h2,h3{font-family:"Fredoka",system-ui,sans-serif;font-weight:700;letter-spaci
 .top{background:var(--band) radial-gradient(circle,#ffffff22 2px,transparent 2.5px) 0 0/22px 22px;color:#fff;border-bottom:4px solid var(--edge)}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:20px;align-items:center}
 .cast{width:100%;height:auto;overflow:visible}
-.cast .bob{animation:bob 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
-.cast .bob:nth-of-type(2){animation-delay:.2s}.cast .bob:nth-of-type(3){animation-delay:.4s}.cast .bob:nth-of-type(4){animation-delay:.6s}
-@keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+.cast .bob{transform-box:fill-box;transform-origin:50% 100%}
+.cast .bob:nth-of-type(1){animation:march 1.8s ease-in-out infinite}
+.cast .bob:nth-of-type(2){animation:tick 1.2s ease-in-out infinite}
+.cast .bob:nth-of-type(3){animation:count 2.4s ease-out infinite}
+.cast .bob:nth-of-type(4){animation:hyper 2.2s cubic-bezier(.3,.6,.4,1) infinite}
+.cast .bob:nth-of-type(4){transform-origin:50% 60%}
+@keyframes march{0%,100%{transform:translateX(-6px)}12%,62%{transform:translate(0,-8px)}25%,75%{transform:translateX(6px)}50%{transform:translateX(-6px)}37%,87%{transform:translateY(-4px)}}
+@keyframes tick{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+@keyframes count{0%,30%,60%,100%{transform:none}10%,40%,70%{transform:translateY(-12px) scale(.96,1.05)}20%,50%,80%{transform:scale(1.08,.9)}}
+@keyframes hyper{0%,55%,100%{transform:none}20%{transform:translateY(-26px) rotate(180deg) scale(1.05)}40%{transform:translateY(0) rotate(360deg) scale(1.12,.86)}48%{transform:scale(.95,1.06)}}
+.tab:hover i{animation:wig .5s}
+@keyframes wig{30%{transform:scale(1.4) rotate(20deg)}60%{transform:scale(.9) rotate(-15deg)}}
 .cast text{paint-order:normal;stroke:none;font:700 16px "Fredoka",system-ui,sans-serif;fill:#1b1340}
 .top h1{font-size:clamp(36px,5.4vw,60px);font-weight:700;text-shadow:4px 4px 0 var(--edge)}
 .top h1 span{color:var(--sun)}
@@ -75,7 +84,7 @@ button:active{transform:translate(3px,3px)!important;box-shadow:none!important}
 .evict{font-size:14px;color:#1b1340;font-weight:600}
 .evict s{font:700 18px "Fredoka",system-ui,sans-serif;color:#c4003f}
 .rack{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:12px;align-content:start;padding-top:22px}
-.slot{position:relative;min-height:134px;border-radius:16px 16px 6px 6px;background:var(--chip);color:#fff;padding:10px 10px 30px;border:3px solid var(--edge);box-shadow:4px 4px 0 var(--edge);display:flex;flex-direction:column;justify-content:space-between}
+.slot{position:relative;min-height:134px;border-radius:16px 16px 6px 6px;background:var(--chip);color:#fff;padding:10px 10px 38px;border:3px solid var(--edge);box-shadow:4px 4px 0 var(--edge);display:flex;flex-direction:column;justify-content:space-between}
 .slot::after{content:"";position:absolute;left:9px;right:9px;bottom:7px;height:13px;border-radius:2px;background:repeating-linear-gradient(90deg,#e2bd5c 0 5px,transparent 5px 9px)}
 .slot .fn{font-size:13px;font-weight:600;color:#dcd8ff}
 .slot .no{font:700 46px/1 "Fredoka",system-ui,sans-serif}
@@ -101,7 +110,7 @@ input[type=range]{accent-color:var(--fault);width:120px;height:44px}
 .sec h2{font-size:clamp(28px,3.4vw,38px);margin-bottom:22px}
 table.grid{border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums}
 .grid th,.grid td{width:34px;min-width:34px;height:34px;text-align:center;border-radius:9px;font-size:15px;font-weight:700;padding:0}
-.grid th.rl{position:sticky;left:0;z-index:1;background:var(--panel);box-shadow:-8px 0 0 var(--panel),5px 0 0 var(--panel);width:auto;min-width:64px;text-align:left;font-weight:500;color:var(--mute);font-size:13px;padding-right:6px;white-space:nowrap}
+.grid th.rl{position:sticky;left:0;z-index:2;background:var(--panel);border-radius:0;box-shadow:3px 0 0 var(--panel),6px 0 0 var(--line);width:auto;min-width:84px;text-align:left;font-weight:600;color:var(--mute);font-size:13px;padding:0 10px 0 16px;white-space:nowrap}
 .grid thead th button{width:34px;height:34px;border:2.5px solid var(--edge);border-radius:9px;background:var(--sun);color:#1b1340;color:var(--ink);font:700 15px "Fredoka",system-ui,sans-serif;cursor:pointer}
 .grid thead th.cur button{background:var(--fault);color:#fff;transform:translateY(-3px)}
 .grid td{background:var(--soft)}
@@ -109,6 +118,33 @@ table.grid{border-collapse:separate;border-spacing:3px;font-variant-numeric:tabu
 .grid td.new{background:var(--fault);color:#fff;font-weight:700}
 .grid td.hc{background:var(--hit);color:#fff;font-weight:700}
 .grid td.cur{box-shadow:inset 0 0 0 3px var(--edge)}
+.tlcard{padding:16px 16px 12px 0}
+.grid{margin-left:0}
+.mbar{position:absolute;left:9px;bottom:25px;height:7px;max-width:calc(100% - 18px);border-radius:9px;background:var(--sun);box-shadow:0 0 0 1.5px var(--edge)}
+.mini .mbar{left:6px;bottom:18px;height:6px;max-width:calc(100% - 12px)}
+.barcap{margin:12px 0 0;font-size:14px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.barcap i{flex:none;width:28px;height:7px;border-radius:9px;background:var(--sun);box-shadow:0 0 0 1.5px var(--edge)}
+.demo{margin:14px 0 4px;background:var(--soft);border:2.5px solid var(--edge);border-radius:16px;padding:10px 10px 8px;overflow:hidden}
+.dtick{display:flex;gap:3px;align-items:center}
+.dtick span{flex:none;width:23px;height:23px;border-radius:7px;display:grid;place-items:center;font:700 13px "Fredoka",system-ui,sans-serif;background:var(--panel);border:2px solid var(--line);color:var(--ink);transition:transform .2s}
+.dtick .past{opacity:.4}
+.dtick .now{background:var(--c);color:#fff;border-color:var(--edge);transform:translateY(-3px) scale(1.12)}
+.dslots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px;height:98px}
+.dslot{position:relative;border:2.5px dashed var(--line);border-radius:12px 12px 5px 5px}
+.dchip{position:absolute;inset:-2.5px;background:var(--chip);border:2.5px solid var(--edge);border-radius:12px 12px 5px 5px;color:#fff;padding:6px 7px;box-shadow:3px 3px 0 var(--edge);display:flex;flex-direction:column}
+.dchip b{font:700 30px/1 "Fredoka",system-ui,sans-serif;margin-top:6px}
+.dchip small{font-size:13px;color:#e4e0ff;white-space:nowrap;margin-top:auto;margin-bottom:12px}
+.dchip .db{position:absolute;left:7px;bottom:7px;height:7px;border-radius:9px;background:var(--sun);box-shadow:0 0 0 1.5px var(--edge);transition:width .45s cubic-bezier(.3,1.4,.5,1)}
+.dchip .face{transform:scale(.62);transform-origin:top right;top:7px;right:6px}
+.dchip.doomed{background:var(--fault);animation:shiver .22s infinite}
+.dchip.doomed .face i{width:9px;height:11px;top:-2px;animation:none}
+.dchip.doomed .face b{display:block;position:absolute;left:7px;top:14px;width:8px;height:8px;border:2px solid #fff;border-radius:50%}
+.dchip.dhit{background:var(--hit)}
+.dchip.dhit .face i{height:7px;background:none;border-top:3px solid #fff;border-radius:50% 50% 0 0;animation:none}
+.dchip.dnew{background:var(--c)}
+.demo[data-alg=MFU] .dchip.dnew{color:#1b1340}
+.demo[data-alg=MFU] .dchip.dnew small{color:#1b1340}
+.dnote{margin:9px 0 0;font-size:14px;font-weight:700;min-height:1.5em}
 .grid tr.res td{background:none;font:700 14px "Fredoka",system-ui,sans-serif}
 .grid tr.res td.F{color:var(--fault)}
 .grid tr.res td.H{color:var(--hit)}
@@ -116,7 +152,7 @@ table.grid{border-collapse:separate;border-spacing:3px;font-variant-numeric:tabu
 .legend i{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--edge);vertical-align:-1px;margin-right:6px}
 .side{display:flex;flex-direction:column;gap:24px}
 .race{display:flex;flex-direction:column;gap:6px}
-.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;border:3px solid transparent;cursor:pointer;background:none;color:var(--ink);font:inherit;text-align:left;width:100%}
+.row{display:grid;grid-template-columns:66px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;border:3px solid transparent;cursor:pointer;background:none;color:var(--ink);font:inherit;text-align:left;width:100%}
 .row:hover{background:var(--soft)}
 .row.on{border-color:var(--edge);background:color-mix(in srgb,var(--c) 16%,transparent)}
 .row b{font:700 18px "Fredoka",system-ui,sans-serif;color:var(--c)}
@@ -182,7 +218,7 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
 .bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:10px;height:10px;background:#fff;border:solid var(--edge);border-width:0 2.5px 2.5px 0;transform:translateX(-50%) rotate(45deg)}
 .why.good{border-color:var(--hit)}
 .why.bad{border-color:var(--fault)}
-.row .tag{font:700 12px "Fredoka",system-ui,sans-serif;background:var(--c);color:#fff;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.row .tag{display:block;width:max-content;font:700 12px "Fredoka",system-ui,sans-serif;background:var(--c);color:#fff;border-radius:99px;padding:1px 8px;margin-top:3px;animation:wig .6s}
 .row.champ{background:color-mix(in srgb,var(--c) 12%,transparent)}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 @media(max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}.cast{max-width:340px}}
@@ -201,7 +237,7 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
 .mres .evict{color:var(--ink)}
 .mres .evict s{color:var(--fault)}
 .mini .rack{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding-top:22px}
-.mini .slot{min-height:94px;padding:7px 7px 22px;border-radius:12px 12px 5px 5px;box-shadow:3px 3px 0 var(--edge)}
+.mini .slot{min-height:100px;padding:7px 7px 28px;border-radius:12px 12px 5px 5px;box-shadow:3px 3px 0 var(--edge)}
 .mini .slot .no{font-size:30px}
 .slot .no.sm{font-size:34px;margin-top:10px}
 .mini .slot .no.sm{font-size:22px}
@@ -276,6 +312,7 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
           <div class="rack" id="rack"></div>
         </div>
         <div class="quad" id="quad" hidden></div>
+        <p class="barcap" id="barcap"></p>
         <p class="why" id="why"></p>
         <div class="ctrl">
           <button id="first">Reset</button>
@@ -289,7 +326,7 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
       </div>
       <div class="tl">
         <h2 id="tlh">Timeline</h2>
-        <div class="card scroll"><table class="grid" id="grid"></table></div>
+        <div class="card scroll tlcard"><table class="grid" id="grid"></table></div>
         <div class="legend" id="legend"><span><i style="background:var(--fault)"></i>Page fault, page loaded</span><span><i style="background:var(--hit)"></i>Hit</span><span>Click a column to jump to that step. Arrow keys step too.</span></div>
       </div>
     </section>
@@ -314,10 +351,10 @@ svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nuni
   <div class="wrap">
     <h2>How each one picks a victim</h2>
     <div class="algs">
-      <article style="--c:var(--fifo)"><h3>FIFO<span>First in, first out</span></h3><p>Evicts the page that has been in memory longest, whether or not it is still busy. Cheap to run with a queue, but it can throw out a hot page and is the classic case of Belady's anomaly.</p></article>
-      <article style="--c:var(--lru)"><h3>LRU<span>Least recently used</span></h3><p>Evicts the page whose last use is furthest in the past. It tracks locality well and never shows Belady's anomaly, but true LRU needs a timestamp or stack update on every access.</p></article>
-      <article style="--c:var(--lfu)"><h3>LFU<span>Least frequently used</span></h3><p>Evicts the page with the fewest uses since it was loaded. Good when popularity is stable; slow to forget a page that was busy long ago. Ties go to the oldest page.</p></article>
-      <article style="--c:var(--mfu)"><h3>MFU<span>Most frequently used</span></h3><p>Evicts the page with the most uses, betting that a heavily used page has finished its work and a newcomer is about to be needed. Rarely wins in practice. Ties go to the oldest page.</p></article>
+      <article style="--c:var(--fifo)"><h3>FIFO<span>First in, first out</span></h3><div class="demo" data-alg="FIFO" data-ref="1 2 3 4 1 5 2 3" aria-label="Looping FIFO demo with 3 frames"></div><p>Evicts the page that has been in memory longest, whether or not it is still busy. Cheap to run with a queue, but it can throw out a hot page and is the classic case of Belady's anomaly.</p></article>
+      <article style="--c:var(--lru)"><h3>LRU<span>Least recently used</span></h3><div class="demo" data-alg="LRU" data-ref="1 2 3 1 4 1 5 3" aria-label="Looping LRU demo with 3 frames"></div><p>Evicts the page whose last use is furthest in the past. It tracks locality well and never shows Belady's anomaly, but true LRU needs a timestamp or stack update on every access.</p></article>
+      <article style="--c:var(--lfu)"><h3>LFU<span>Least frequently used</span></h3><div class="demo" data-alg="LFU" data-ref="1 1 2 3 1 4 2 5" aria-label="Looping LFU demo with 3 frames"></div><p>Evicts the page with the fewest uses since it was loaded. Good when popularity is stable; slow to forget a page that was busy long ago. Ties go to the oldest page.</p></article>
+      <article style="--c:var(--mfu)"><h3>MFU<span>Most frequently used</span></h3><div class="demo" data-alg="MFU" data-ref="1 1 2 3 4 2 5 1" aria-label="Looping MFU demo with 3 frames"></div><p>Evicts the page with the most uses, betting that a heavily used page has finished its work and a newcomer is about to be needed. Rarely wins in practice. Ties go to the oldest page.</p></article>
     </div>
     <p class="foot">Use counts start at 1 when a page is loaded and reset when it is evicted. Every algorithm fills empty frames first, left to right.</p>
   </div>
@@ -456,9 +493,11 @@ function render(){
     const meta=st.alg==='FIFO'?`in since ${f.load+1}`:st.alg==='LRU'?`used at ${f.last+1}`:`${f.cnt} use${f.cnt>1?'s':''}`;
     if(pend){h+=`<button class="slot pick" data-k="${k}" aria-label="Evict page ${f.p} from frame ${k+1}">${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></button>`;continue}
     const cls=(k===s.slot?(s.hit?'hit':'in'):'')+(k===nx?' scared':'');
-    h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out!</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></div>`;
+    h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out!</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span>${bar(s.frames,f,st.t,st.alg,'one'+k)}</div>`;
   }
   $('#rack').innerHTML=h;
+  $('#barcap').innerHTML=pend?'':`<i></i>Yellow bar: ${BAR[st.alg]}`;
+  animBars();
   $('#why').className='why';
   $('#why').textContent=pend?`Page ${q.p} needs a seat and all ${st.n} frames are full. You're ${st.alg}: who gets the boot?`:s.why;
   const sb=$('#score');sb.hidden=!st.quiz;
@@ -495,11 +534,13 @@ function renderAll(){
       if(!f){h+=`<div class="slot empty"><span class="fn">#${k+1}</span><span class="meta">empty</span></div>`;continue}
       const meta=a.id==='FIFO'?`in ${f.load+1}`:a.id==='LRU'?`used ${f.last+1}`:`×${f.cnt}`;
       const cls=(k===s.slot?(s.hit?'hit':'in'):'')+(k===nx?' scared':'');
-      h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></div>`;
+      h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span>${bar(s.frames,f,t,a.id,a.id+k)}</div>`;
     }
     return `<article class="mini ${s.faults===best?'lead':''}" style="--c:${a.c}"><header><b>${a.id}</b><span>${s.faults} fault${s.faults===1?'':'s'}</span></header><div class="mbody"><p class="mres"><span class="badge ${s.hit?'hit':''}">${s.hit?'Hit!':'Fault'}</span>${s.victim!==null?`<span class="evict">Evicted <s>${s.victim}</s></span>`:s.hit?'':'<span class="evict">Free frame</span>'}</p><div class="rack" data-alg="${a.id}">${h}</div></div></article>`;
   }).join('');
+  $('#barcap').innerHTML='<i></i>Yellow bars show what each algorithm watches: time in memory (FIFO), time since last use (LRU) or number of uses (LFU, MFU).';
   $('#quad').innerHTML=`<div class="qhead">Request ${t+1} of ${len}<b>${st.ref[t]}</b></div><div class="boards">${boards}</div>`;
+  animBars();
   const leaders=ALGS.filter(a=>runs[a.id][t].faults===best).map(a=>a.id);
   const tilted=leaders.length===4?'All four are tied':`${leaders.join(' and ')} ${leaders.length>1?'share the lead':'leads'}`;
   $('#why').className='why';
@@ -564,6 +605,21 @@ function go(t,force){
   if(!force&&st.quiz&&!st.all&&t===st.t+1&&runs[st.alg][t].victim!==null){st.pend=t;stop();render();SFX.ask();return}
   const fwd=t===st.t+1;st.t=t;render();
   if(fwd)fx();
+}
+const BAR={FIFO:'time in memory. FIFO evicts the longest bar.',LRU:'time since last use. LRU evicts the longest bar.',LFU:'number of uses. LFU evicts the shortest bar.',MFU:'number of uses. MFU evicts the longest bar.'};
+function bar(frames,f,t,alg,key){const w=barW(frames,f,t,alg);return `<i class="mbar" data-key="${key}" data-p="${f.p}" data-w="${w}" style="width:calc(${w}% - ${w*.18}px)"></i>`}
+function barW(frames,f,t,alg){
+  const v=x=>alg==='FIFO'?t-x.load+1:alg==='LRU'?t-x.last+1:x.cnt;
+  const m=Math.max(...frames.filter(Boolean).map(v));
+  return Math.max(8,Math.round(v(f)/m*100));
+}
+const prevBar={};
+function animBars(){
+  document.querySelectorAll('.mbar').forEach(b=>{
+    const key=b.dataset.key,w=+b.dataset.w,p=prevBar[key];
+    if(!calm&&p!==undefined&&p.page===b.dataset.p&&p.w!==w)b.animate([{width:`calc(${p.w}% - ${p.w*.18}px)`},{width:b.style.width}],{duration:550,easing:'cubic-bezier(.3,1.4,.5,1)'});
+    prevBar[key]={w,page:b.dataset.p};
+  });
 }
 const lbl=p=>`<span class="no${(String(p).length>2||/[A-Z]/.test(p))?' sm':''}">${p}</span>`;
 function spawn(cls,css,html){const d=document.createElement('div');d.className=cls;d.style.cssText=css;if(html)d.innerHTML=html;document.body.appendChild(d);return d}
@@ -693,6 +749,46 @@ document.addEventListener('keydown',e=>{
   else if(e.key===' '&&!e.target.matches('button')){e.preventDefault();play()}
 });
 
+
+const SHORT={FIFO:'oldest arrival',LRU:'unused the longest',LFU:'fewest uses',MFU:'most uses'};
+function demo(box){
+  const alg=box.dataset.alg,ref=box.dataset.ref.split(' '),R=sim(ref,3,alg);let k=-1,busy=false;
+  box.innerHTML=`<div class="dtick">${ref.map(p=>`<span>${p}</span>`).join('')}</div><div class="dslots"><div class="dslot"></div><div class="dslot"></div><div class="dslot"></div></div><p class="dnote">Yellow bar: ${BAR[alg].split('.')[0]}.</p>`;
+  const slots=[...box.querySelectorAll('.dslot')],ticks=[...box.querySelectorAll('.dtick span')],note=box.querySelector('.dnote');
+  const chip=(fr,f,t,cls)=>{const w=barW(fr,f,t,alg);const m=alg==='FIFO'?`in @${f.load+1}`:alg==='LRU'?(t===f.last?'now':`${t-f.last} ago`):`×${f.cnt}`;return `<div class="dchip ${cls||''}">${face}<b>${f.p}</b><small>${m}</small><i class="db" style="width:calc(${w}% - ${w*.14}px)"></i></div>`};
+  const paint=(t,hot,cls)=>{const s=R[t];slots.forEach((sl,i)=>{const f=s.frames[i];const old=sl.firstElementChild;
+    if(!f){sl.innerHTML='';return}
+    if(old&&i!==hot&&old.querySelector('b').textContent===String(f.p)){const w=barW(s.frames,f,t,alg);old.className='dchip';old.querySelector('small').textContent=alg==='FIFO'?`in @${f.load+1}`:alg==='LRU'?(t===f.last?'now':`${t-f.last} ago`):`×${f.cnt}`;old.querySelector('.db').style.width=`calc(${w}% - ${w*.14}px)`}
+    else sl.innerHTML=chip(s.frames,f,t,i===hot?cls:'')})};
+  const drop=el=>{if(!calm&&el)el.animate([{transform:'translateY(-70px) rotate(-10deg)',opacity:0},{transform:'translateY(4px) scale(1.1,.88)',opacity:1,offset:.6},{transform:'none'}],{duration:480,easing:'ease-out'})};
+  function step(){
+    if(busy)return;
+    k++;
+    if(k>=ref.length){k=-1;slots.forEach(sl=>{const c=sl.firstElementChild;if(c&&!calm)c.animate([{opacity:1},{opacity:0,transform:'scale(.6)'}],{duration:350,fill:'forwards'})});ticks.forEach(e=>e.className='');note.textContent='Again!';setTimeout(()=>slots.forEach(sl=>sl.innerHTML=''),360);return}
+    const s=R[k];ticks.forEach((e,j)=>e.className=j<k?'past':j===k?'now':'');
+    if(s.victim!==null){
+      const v=slots[s.slot].firstElementChild;v.classList.add('doomed');
+      note.textContent=`${s.p} needs room: kick ${s.victim}, ${SHORT[alg]}`;
+      busy=true;
+      setTimeout(()=>{
+        const done=()=>{paint(k,s.slot,'dnew');drop(slots[s.slot].firstElementChild);busy=false};
+        if(calm||!v.isConnected){done();return}
+        v.animate([{transform:'none'},{transform:'translateY(-18px) rotate(-12deg)',offset:.3},{transform:'translate(-40px,120px) rotate(-60deg)',opacity:0}],{duration:520,easing:'ease-in',fill:'forwards'}).onfinish=done;
+      },650);
+    }else if(s.hit){
+      paint(k,s.slot,'dhit');const c=slots[s.slot].firstElementChild;
+      if(!calm)c.animate([{transform:'none'},{transform:'translateY(-14px) scale(1.06)',offset:.35},{transform:'scale(1.08,.9)',offset:.7},{transform:'none'}],{duration:500});
+      note.textContent=`${s.p} is already in: hit!`;
+    }else{
+      paint(k,s.slot,'dnew');drop(slots[s.slot].firstElementChild);
+      note.textContent=`${s.p} takes an empty frame`;
+    }
+  }
+  let vis=false;
+  const io=new IntersectionObserver(es=>{vis=es[0].isIntersecting});io.observe(box);
+  setInterval(()=>{if(vis&&!document.hidden)step()},1600);
+}
+document.querySelectorAll('.demo').forEach(demo);
 const saved=load();
 if(saved&&saved.s){$('#refs').value=saved.s;st.n=Math.min(8,Math.max(1,saved.n|0||3));if(ALGS.some(a=>a.id===saved.alg))st.alg=saved.alg;st.all=!!saved.all;if(saved.g)for(const k of Object.keys(G)){const v=+saved.g[k];if(Number.isFinite(v))G[k]=k==='loc'?Math.min(100,Math.max(0,v)):Math.min(GL[k][1],Math.max(GL[k][0],v))}}
 else{$('#refs').value=PRE.classic.s}

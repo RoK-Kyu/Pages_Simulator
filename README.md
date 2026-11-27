@@ -20,6 +20,8 @@ The whole app is a single file, `index.html`, with no build step and no dependen
 - **The race:** fault counts and hit rates for all four algorithms at the current step, plus the winner over the whole string.
 - **Faults vs. frames chart:** faults for 1 to 8 frames for each algorithm, with automatic detection of **Belady's anomaly**.
 - **Play as the OS:** a game mode. Whenever memory is full, you pick the page the algorithm would evict. You get points, streak bonuses and feedback on each answer.
+- **Algorithm demos:** each algorithm card has a looping mini simulation showing how it picks a victim, and each header mascot moves in its own style.
+- **Metric bars:** every memory chip has a yellow bar showing what the algorithm watches: time in memory (FIFO), time since last use (LRU) or number of uses (LFU, MFU).
 - **Animations and sound:** pages fly from the request ticket into their frame, evicted pages get kicked out with a "bye!" and a puff of smoke, plus confetti and sound effects. Sound can be switched off, and animations turn off automatically if the device is set to reduce motion.
 
 ![All four algorithms side by side](screenshots/all-four.png)
@@ -55,5 +57,7 @@ Check: on the textbook string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1` with 3 f
 
 ![Play as the OS mode](screenshots/play-as-the-os.png)
 ![Eviction animation in the All four view](screenshots/animations.png)
+![Looping demos for each algorithm](screenshots/algorithm-demos.png)
+![Dark mode](screenshots/dark-mode.png)
 
 Your settings are remembered in your browser (localStorage) between visits.
