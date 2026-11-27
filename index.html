@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page Replacement Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE playful learning toy, still exact
+   IDEA a toy memory board: frames are chunky chip characters who fear eviction, requests are tickets
+   PICTURE the live rack of chip characters, a bouncing chip cast in the header, punched timeline below
+   COLOUR royal blue band, butter ground, ink outlines with hard shadows, pink faults, mint hits, one colour per algorithm
+   TYPE Fredoka + Nunito
+   LAYOUT laptop: band with inputs, rack + timeline left, race scoreboard right; phone: band, rack, race, timeline */
+:root{color-scheme:light dark;--bg:light-dark(#fff4d6,#16113a);--ink:light-dark(#1b1340,#fff4d6);--mute:light-dark(#5b5278,#bdb4e0);--panel:light-dark(#ffffff,#251d5c);--soft:light-dark(#f4f0ff,#33297a);--line:light-dark(#e3dcf5,#43389a);--edge:light-dark(#1b1340,#07041a);--chip:light-dark(#3b2bd6,#4b3cf2);--band:#2f3dff;--sun:#ffd23f;--fault:#ff2e6e;--hit:#00b894;--fifo:#ff7a2f;--lru:#1f8bff;--lfu:#a35cff;--mfu:#f5b400}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Nunito",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Fredoka",system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;line-height:1.05;margin:0}
+.band{padding:clamp(22px,3.4vw,44px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.top{background:var(--band) radial-gradient(circle,#ffffff22 2px,transparent 2.5px) 0 0/22px 22px;color:#fff;border-bottom:4px solid var(--edge)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:20px;align-items:center}
+.cast{width:100%;height:auto;overflow:visible}
+.cast .bob{animation:bob 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.cast .bob:nth-of-type(2){animation-delay:.2s}.cast .bob:nth-of-type(3){animation-delay:.4s}.cast .bob:nth-of-type(4){animation-delay:.6s}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+.cast text{paint-order:normal;stroke:none;font:700 16px "Fredoka",system-ui,sans-serif;fill:#1b1340}
+.top h1{font-size:clamp(36px,5.4vw,60px);font-weight:700;text-shadow:4px 4px 0 var(--edge)}
+.top h1 span{color:var(--sun)}
+.top p{margin:10px 0 0;color:#eef0ff;max-width:58ch;font-size:17px}
+.inputs{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 18px;margin-top:22px;align-items:end}
+.inputs label{display:block;font-size:15px;font-weight:600;color:#fff;margin-bottom:6px}
+#refs{width:100%;font:500 17px/1.3 "Nunito",sans-serif;padding:11px 14px;border-radius:14px;border:3px solid var(--edge);background:#fff;color:#1b1340;letter-spacing:.06em;box-shadow:4px 4px 0 var(--edge)}
+#refs:focus-visible,button:focus-visible,input[type=range]:focus-visible{outline:3px solid var(--fault);outline-offset:3px}
+.stepper{display:inline-flex;align-items:center;border:3px solid var(--edge);border-radius:14px;background:#fff;color:#1b1340;overflow:hidden;box-shadow:4px 4px 0 var(--edge)}
+.stepper button{width:44px;height:44px;border:0;background:none;color:#1b1340;font:700 24px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.stepper button:hover{background:var(--sun)}
+.stepper output{width:44px;text-align:center;font:700 22px "Fredoka",system-ui,sans-serif}
+.gen{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;background:#1f2bd0;border:3px solid var(--edge);border-radius:18px;padding:14px 16px;box-shadow:5px 5px 0 var(--edge)}
+.gen h3{width:100%;font-size:19px;color:#fff;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.gen h3 small{font:600 14px "Nunito",system-ui,sans-serif;color:#dfe3ff}
+.gen .stepper{box-shadow:3px 3px 0 var(--edge)}
+.gen .stepper button{width:40px;height:40px;font-size:22px}
+.gen .stepper output{width:40px;font-size:20px}
+.gen .loc input{width:150px;accent-color:var(--sun)}
+.gen .loc output{font:700 15px "Fredoka",system-ui,sans-serif;color:#fff;margin-left:6px}
+.shuffle{min-height:44px;padding:0 18px;border-radius:99px;border:3px solid var(--edge);background:var(--fault);color:#fff;box-shadow:3px 3px 0 var(--edge);font:700 16px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.summary{grid-column:1/-1;margin:-4px 0 0;font-size:15px;font-weight:600;color:#fff}
+.summary b{color:var(--sun)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}
+.presets button{min-height:42px;padding:0 16px;border-radius:99px;border:3px solid var(--edge);background:var(--sun);color:#1b1340;box-shadow:3px 3px 0 var(--edge);font:600 15px "Nunito",system-ui,sans-serif;cursor:pointer}
+.presets button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--edge)}
+button:active{transform:translate(3px,3px)!important;box-shadow:none!important}
+.err:empty{display:none}
+.err{color:#fff;font-weight:700;font-size:14px;grid-column:1/-1;min-height:0;margin:0}
+.main{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:24px;align-items:start}
+.card{background:var(--panel);border:3px solid var(--edge);border-radius:22px;padding:20px;box-shadow:6px 6px 0 var(--edge)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tab{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:14px;border:3px solid var(--edge);background:var(--panel);color:var(--ink);box-shadow:3px 3px 0 var(--edge);font:600 17px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.tab i{width:14px;height:14px;border-radius:50%;background:var(--c);border:2px solid var(--edge)}
+.tab[aria-pressed=true]{background:var(--c);color:#fff;transform:rotate(-2deg)}
+.tab[aria-pressed=true] i{background:#fff}
+.stage{display:grid;grid-template-columns:minmax(150px,190px) minmax(0,1fr);gap:20px;align-items:stretch}
+.ticket{border-radius:16px;padding:14px 16px;background:var(--sun);color:#1b1340;border:3px dashed var(--edge);display:flex;flex-direction:column;gap:4px;position:relative}
+.ticket small{color:#1b1340;font-size:14px;font-weight:600}
+.ticket .pg{font:700 clamp(52px,7vw,72px)/1 "Fredoka",system-ui,sans-serif}
+.badge{align-self:flex-start;border:2.5px solid var(--edge);font:700 15px "Fredoka",system-ui,sans-serif;padding:4px 12px;border-radius:99px;color:#fff;background:var(--fault)}
+.badge.hit{background:var(--hit)}
+.evict{font-size:14px;color:#1b1340;font-weight:600}
+.evict s{font:700 18px "Fredoka",system-ui,sans-serif;color:#c4003f}
+.rack{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:12px;align-content:start;padding-top:22px}
+.slot{position:relative;min-height:134px;border-radius:16px 16px 6px 6px;background:var(--chip);color:#fff;padding:10px 10px 30px;border:3px solid var(--edge);box-shadow:4px 4px 0 var(--edge);display:flex;flex-direction:column;justify-content:space-between}
+.slot::after{content:"";position:absolute;left:9px;right:9px;bottom:7px;height:13px;border-radius:2px;background:repeating-linear-gradient(90deg,#e2bd5c 0 5px,transparent 5px 9px)}
+.slot .fn{font-size:13px;font-weight:600;color:#dcd8ff}
+.slot .no{font:700 46px/1 "Fredoka",system-ui,sans-serif}
+.slot .meta{font-size:13px;color:#dfe6fb;white-space:nowrap}
+.slot.empty{background:none;border:3px dashed var(--mute);box-shadow:none;color:var(--mute)}
+.slot.empty .fn,.slot.empty .meta{color:var(--mute)}
+.slot.in{background:var(--fault)}
+.slot.hit{background:var(--hit)}
+@keyframes boing{40%{transform:scale(1.1,.9)}70%{transform:scale(.95,1.06)}}
+.slot .next{position:absolute;top:-26px;left:0;font:700 14px "Fredoka",system-ui,sans-serif;color:var(--fault);white-space:nowrap}
+@keyframes drop{from{transform:translateY(-26px);opacity:.2}to{transform:none;opacity:1}}
+.why{margin:18px 0 0;padding:12px 16px;border:3px solid var(--c);background:var(--soft);border-radius:16px;font-weight:600}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+.ctrl button{min-height:44px;padding:0 16px;border-radius:14px;border:3px solid var(--edge);background:var(--panel);color:var(--ink);box-shadow:3px 3px 0 var(--edge);font:600 16px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.ctrl button:hover{background:var(--soft)}
+.ctrl #play{background:var(--fault);color:#fff;min-width:96px}
+.speed{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:14px;color:var(--mute)}
+input[type=range]{accent-color:var(--fault);width:120px;height:44px}
+.pos{font-size:14px;color:var(--mute);white-space:nowrap}
+.scroll{overflow-x:auto}
+.tl{margin-top:24px}
+.tl h2,.side h2,.sec h2{font-size:26px;font-weight:700;margin-bottom:12px}
+.sec h2{font-size:clamp(28px,3.4vw,38px);margin-bottom:22px}
+table.grid{border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums}
+.grid th,.grid td{width:34px;min-width:34px;height:34px;text-align:center;border-radius:9px;font-size:15px;font-weight:700;padding:0}
+.grid th.rl{position:sticky;left:0;z-index:1;background:var(--panel);box-shadow:-8px 0 0 var(--panel),5px 0 0 var(--panel);width:auto;min-width:64px;text-align:left;font-weight:500;color:var(--mute);font-size:13px;padding-right:6px;white-space:nowrap}
+.grid thead th button{width:34px;height:34px;border:2.5px solid var(--edge);border-radius:9px;background:var(--sun);color:#1b1340;color:var(--ink);font:700 15px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.grid thead th.cur button{background:var(--fault);color:#fff;transform:translateY(-3px)}
+.grid td{background:var(--soft)}
+.grid td.fut{background:none;outline:1px dashed var(--line);outline-offset:-1px}
+.grid td.new{background:var(--fault);color:#fff;font-weight:700}
+.grid td.hc{background:var(--hit);color:#fff;font-weight:700}
+.grid td.cur{box-shadow:inset 0 0 0 3px var(--edge)}
+.grid tr.res td{background:none;font:700 14px "Fredoka",system-ui,sans-serif}
+.grid tr.res td.F{color:var(--fault)}
+.grid tr.res td.H{color:var(--hit)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--mute);margin-top:10px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--edge);vertical-align:-1px;margin-right:6px}
+.side{display:flex;flex-direction:column;gap:24px}
+.race{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;border:3px solid transparent;cursor:pointer;background:none;color:var(--ink);font:inherit;text-align:left;width:100%}
+.row:hover{background:var(--soft)}
+.row.on{border-color:var(--edge);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.row b{font:700 18px "Fredoka",system-ui,sans-serif;color:var(--c)}
+.bar{height:20px;background:var(--soft);border:2.5px solid var(--edge);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .25s}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.num strong{font:700 20px "Fredoka",system-ui,sans-serif}
+.num small{display:block;color:var(--mute);font-size:13px}
+.lead{font-size:15px;color:var(--mute);margin:0 0 10px}
+.win{margin:12px 0 0;font-weight:700;font-size:17px}
+.fig{position:relative;min-height:240px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{paint-order:stroke;stroke:var(--panel);stroke-width:4px;font:13px "Nunito",sans-serif;fill:var(--mute)}
+.belady{font-size:15px;margin:10px 0 0}
+.sec{background:var(--soft);border-top:4px solid var(--edge);margin-top:8px}
+.algs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.algs article{background:var(--panel);border:3px solid var(--edge);border-radius:20px;padding:0 18px 18px;box-shadow:5px 5px 0 var(--edge);overflow:hidden}
+.algs article:nth-child(odd){transform:rotate(-1deg)}.algs article:nth-child(even){transform:rotate(1deg)}
+.algs h3{margin:0 -18px;padding:14px 18px;background:var(--c);color:#fff;border-bottom:3px solid var(--edge)}
+.algs h3{font-size:24px}
+.algs h3 span{display:block;font:700 14px "Nunito",system-ui,sans-serif;color:#fff;margin-top:4px;letter-spacing:0}
+.algs p{margin:10px 0 0;font-size:15px}
+.foot{font-size:14px;color:var(--mute);margin-top:20px}
+.bar2{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px;margin-bottom:16px}
+.bar2 .tabs{margin:0}
+.modes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mode{min-height:44px;padding:0 18px;border-radius:99px;border:3px solid var(--edge);background:var(--sun);color:#1b1340;box-shadow:3px 3px 0 var(--edge);font:700 15px "Fredoka",system-ui,sans-serif;cursor:pointer}
+.mode[aria-pressed=true]{background:var(--fault);color:#fff}
+.mode.snd{background:var(--panel);color:var(--mute)}
+.mode.snd[aria-pressed=true]{background:var(--panel);color:var(--ink)}
+.score{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.score span{background:var(--panel);border:2.5px solid var(--edge);border-radius:99px;padding:4px 12px;font-size:14px;white-space:nowrap}
+.score b{font:700 16px "Fredoka",system-ui,sans-serif}
+.score .pts b{color:var(--fault)}
+.score .hot{background:var(--fault);color:#fff}
+.score .hot b{color:#fff}
+.badge.ask{background:var(--ink);color:var(--bg);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.slot.pick{cursor:pointer;transition:transform .15s;font:inherit;text-align:left;width:100%}
+.slot.pick:hover,.slot.pick:focus-visible{transform:translateY(-6px) rotate(-3deg);background:var(--fault);outline:none}
+.face{position:absolute;top:13px;right:10px;width:22px;height:18px}
+.face i{position:absolute;top:0;width:7px;height:9px;background:#fff;border-radius:50%;animation:blink 4.6s infinite}
+.face i+i{left:13px}
+.slot:nth-child(2n) .face i{animation-delay:1.9s}
+.slot:nth-child(3n) .face i{animation-delay:3.1s}
+.face b{display:none}
+.slot.hit .face i{height:7px;background:none;border-top:3px solid #fff;border-radius:50% 50% 0 0;animation:none}
+.slot.scared .face i,.ghost .face i{width:9px;height:11px;top:-2px;animation:none}
+.slot.scared .face b,.ghost .face b{display:block;position:absolute;left:7px;top:14px;width:8px;height:8px;border:2px solid #fff;border-radius:50%}
+.slot.scared{animation:shiver .5s infinite}
+@keyframes shiver{25%{transform:translateX(-1.5px)}75%{transform:translateX(1.5px)}}
+@keyframes blink{0%,92%,100%{transform:none}95%{transform:scaleY(.1)}}
+.ghost{position:fixed;z-index:50;pointer-events:none;margin:0}
+.slot.await{background:var(--chip)!important}
+.slot.await .no,.slot.await .meta{visibility:hidden}
+.slot.await.free{background:none!important;border-style:dashed;box-shadow:none}
+.slot.await.free .face{visibility:hidden}
+.token{position:fixed;z-index:51;pointer-events:none;display:grid;place-items:center;min-width:56px;height:56px;padding:0 10px;border-radius:14px;background:var(--sun);color:#1b1340;border:3px solid var(--edge);box-shadow:3px 3px 0 var(--edge);font:700 28px "Fredoka",system-ui,sans-serif}
+.puff{position:fixed;z-index:49;border-radius:50%;background:#e6e1f7;border:2.5px solid var(--edge);pointer-events:none}
+.ring{position:fixed;z-index:49;border:4px solid var(--fault);border-radius:16px;pointer-events:none}
+.pop{position:fixed;z-index:52;pointer-events:none;color:#fff;border:2.5px solid var(--edge);border-radius:99px;padding:0 10px;font:700 16px "Fredoka",system-ui,sans-serif;white-space:nowrap}
+.bubble{position:absolute;top:-36px;left:50%;transform:translateX(-50%);background:#fff;color:#1b1340;border:2.5px solid var(--edge);border-radius:12px;padding:1px 9px;font:700 15px "Fredoka",system-ui,sans-serif;white-space:nowrap}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:10px;height:10px;background:#fff;border:solid var(--edge);border-width:0 2.5px 2.5px 0;transform:translateX(-50%) rotate(45deg)}
+.why.good{border-color:var(--hit)}
+.why.bad{border-color:var(--fault)}
+.row .tag{font:700 12px "Fredoka",system-ui,sans-serif;background:var(--c);color:#fff;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.row.champ{background:color-mix(in srgb,var(--c) 12%,transparent)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+@media(max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}.cast{max-width:340px}}
+@media(max-width:640px){.tab{padding:0 11px;font-size:16px}.cast{max-width:230px;margin-top:-4px}.top p{font-size:16px}.inputs{margin-top:14px;gap:10px}.presets button{min-height:40px;padding:0 12px;font-size:14px}.inputs>div:nth-child(2){display:flex;align-items:center;gap:12px}.inputs>div:nth-child(2) label{margin:0}}
+.tab.alltab i,.tab.alltab[aria-pressed=true] i{background:conic-gradient(var(--fifo) 0 25%,var(--lru) 0 50%,var(--lfu) 0 75%,var(--mfu) 0)}
+.tab.alltab[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.qhead{font:600 18px "Fredoka",system-ui,sans-serif;margin-bottom:6px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.qhead b{font-size:30px;line-height:1.2;background:var(--sun);color:#1b1340;border:3px dashed var(--edge);border-radius:12px;padding:0 12px}
+.boards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.mini{border:3px solid var(--edge);border-radius:16px;overflow:hidden;box-shadow:4px 4px 0 var(--edge);background:var(--panel)}
+.mini.lead{transform:rotate(-1deg)}
+.mini header{display:flex;justify-content:space-between;align-items:center;background:var(--c);color:#fff;padding:6px 12px;border-bottom:3px solid var(--edge);font:700 19px "Fredoka",system-ui,sans-serif}
+.mini header span{font-size:15px;white-space:nowrap}
+.mbody{padding:10px 12px 14px}
+.mres{margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-height:34px}
+.mres .evict{color:var(--ink)}
+.mres .evict s{color:var(--fault)}
+.mini .rack{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding-top:22px}
+.mini .slot{min-height:94px;padding:7px 7px 22px;border-radius:12px 12px 5px 5px;box-shadow:3px 3px 0 var(--edge)}
+.mini .slot .no{font-size:30px}
+.slot .no.sm{font-size:34px;margin-top:10px}
+.mini .slot .no.sm{font-size:22px}
+.mini .slot .meta{font-size:13px}
+.mini .slot::after{height:9px;bottom:5px;left:6px;right:6px}
+.mini .face{transform:scale(.72);transform-origin:top right;top:8px;right:6px}
+.mini .slot .next{font-size:13px;top:-21px}
+.grid td.cnt{background:none;font:700 17px "Fredoka",system-ui,sans-serif;padding:0 6px}
+@media(max-width:640px){.boards{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:980px){.main{grid-template-columns:minmax(0,1fr)}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.algs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.inputs{grid-template-columns:minmax(0,1fr)}.stage{grid-template-columns:minmax(0,1fr)}.ticket{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px}.ticket .pg{font-size:52px}.side{grid-template-columns:minmax(0,1fr)}.algs{grid-template-columns:minmax(0,1fr)}.speed{margin-left:0}.card{padding:16px}.rack{grid-template-columns:repeat(auto-fill,minmax(74px,1fr))}}
+@media(prefers-reduced-motion:reduce){.cast .bob,.slot.hit,.slot.in,.slot.scared,.face i,.badge.ask{animation:none}.bar span,.slot.pick{transition:none}}
+</style>
+</head>
+<body>
+<header class="band top">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>Page replacement <span>lab</span></h1>
+        <p>Feed page requests into memory and watch FIFO, LRU, LFU and MFU decide who gets kicked out. Or hit Play as the OS and make the call yourself.</p>
+      </div>
+      <svg class="cast" viewBox="0 0 380 170" role="img" aria-label="Four chip characters, one for each algorithm"><ellipse cx="46" cy="160" rx="30" ry="6" fill="#00000033"/><g class="bob"><rect x="18" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="27" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="36" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="45" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="54" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="63" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="72" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="12" y="44" width="70" height="90" rx="14" fill="#1b1340"/><rect x="8" y="40" width="70" height="90" rx="14" fill="#ff7a2f" stroke="#1b1340" stroke-width="3.5"/><rect x="16" y="48" width="18" height="6" rx="3" fill="#ffffff66"/><ellipse cx="34" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><ellipse cx="58" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><circle cx="35" cy="82" r="3" fill="#1b1340"/><circle cx="59" cy="82" r="3" fill="#1b1340"/><path d="M36 98 q10 10 20 0" fill="none" stroke="#1b1340" stroke-width="3.5" stroke-linecap="round"/><text x="43" y="122" text-anchor="middle">FIFO</text></g><ellipse cx="140" cy="160" rx="30" ry="6" fill="#00000033"/><g class="bob"><rect x="112" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="121" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="130" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="139" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="148" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="157" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="166" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="106" y="44" width="70" height="90" rx="14" fill="#1b1340"/><rect x="102" y="40" width="70" height="90" rx="14" fill="#1f8bff" stroke="#1b1340" stroke-width="3.5"/><rect x="110" y="48" width="18" height="6" rx="3" fill="#ffffff66"/><ellipse cx="128" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><ellipse cx="152" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><circle cx="129" cy="82" r="3" fill="#1b1340"/><circle cx="153" cy="82" r="3" fill="#1b1340"/><path d="M130 98 q10 10 20 0" fill="none" stroke="#1b1340" stroke-width="3.5" stroke-linecap="round"/><text x="137" y="122" text-anchor="middle">LRU</text></g><ellipse cx="234" cy="160" rx="30" ry="6" fill="#00000033"/><g class="bob"><rect x="206" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="215" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="224" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="233" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="242" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="251" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="260" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="200" y="44" width="70" height="90" rx="14" fill="#1b1340"/><rect x="196" y="40" width="70" height="90" rx="14" fill="#a35cff" stroke="#1b1340" stroke-width="3.5"/><rect x="204" y="48" width="18" height="6" rx="3" fill="#ffffff66"/><ellipse cx="222" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><ellipse cx="246" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><circle cx="223" cy="82" r="3" fill="#1b1340"/><circle cx="247" cy="82" r="3" fill="#1b1340"/><circle cx="234" cy="100" r="6" fill="#1b1340"/><text x="231" y="122" text-anchor="middle">LFU</text></g><ellipse cx="328" cy="160" rx="30" ry="6" fill="#00000033"/><g class="bob"><rect x="300" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="309" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="318" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="327" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="336" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="345" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="354" y="130" width="5" height="12" rx="1" fill="#ffd23f" stroke="#1b1340" stroke-width="1.5"/><rect x="294" y="44" width="70" height="90" rx="14" fill="#1b1340"/><rect x="290" y="40" width="70" height="90" rx="14" fill="#f5b400" stroke="#1b1340" stroke-width="3.5"/><rect x="298" y="48" width="18" height="6" rx="3" fill="#ffffff66"/><ellipse cx="316" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><ellipse cx="340" cy="80" rx="6" ry="8" fill="#fff" stroke="#1b1340" stroke-width="2.5"/><circle cx="317" cy="82" r="3" fill="#1b1340"/><circle cx="341" cy="82" r="3" fill="#1b1340"/><path d="M318 98 q10 10 20 0" fill="none" stroke="#1b1340" stroke-width="3.5" stroke-linecap="round"/><text x="325" y="122" text-anchor="middle">MFU</text></g></svg>
+    </div>
+    <div class="inputs">
+      <div>
+        <label for="refs">Reference string: type or edit freely. Use 3 for page 3, or B3 for page 3 of process B. Up to 40 requests.</label>
+        <input id="refs" type="text" inputmode="numeric" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <label id="nlab">Frames</label>
+        <div class="stepper" role="group" aria-labelledby="nlab">
+          <button id="nminus" aria-label="Fewer frames">−</button>
+          <output id="nval">3</output>
+          <button id="nplus" aria-label="More frames">+</button>
+        </div>
+      </div>
+      <div class="presets">
+        <button data-p="classic">Textbook string</button>
+        <button data-p="belady">Belady's anomaly</button>
+        <button data-p="hot">One hot page</button>
+        <button data-p="scan">Looping scan</button>
+      </div>
+      <p class="err" id="err"></p>
+      <p class="summary" id="summary"></p>
+      <div class="gen">
+        <h3>Auto-generate <small>Change any setting and a new string appears. Shuffle rolls again with the same settings.</small></h3>
+        <div><label id="gpl">Processes</label><div class="stepper" role="group" aria-labelledby="gpl"><button data-g="procs" data-d="-1" aria-label="Fewer processes">−</button><output id="g-procs"></output><button data-g="procs" data-d="1" aria-label="More processes">+</button></div></div>
+        <div><label id="gpp">Pages per process</label><div class="stepper" role="group" aria-labelledby="gpp"><button data-g="pages" data-d="-1" aria-label="Fewer pages">−</button><output id="g-pages"></output><button data-g="pages" data-d="1" aria-label="More pages">+</button></div></div>
+        <div><label id="gln">Requests</label><div class="stepper" role="group" aria-labelledby="gln"><button data-g="len" data-d="-1" aria-label="Fewer requests">−</button><output id="g-len"></output><button data-g="len" data-d="1" aria-label="More requests">+</button></div></div>
+        <div class="loc"><label for="g-loc">Locality</label><input id="g-loc" type="range" min="0" max="100" step="10"><output id="g-locv"></output></div>
+        <button class="shuffle" id="shuffle">Shuffle</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="band">
+  <div class="wrap main">
+    <section>
+      <div class="bar2">
+        <div class="tabs" id="tabs"></div>
+        <div class="modes">
+          <button id="quiz" class="mode" aria-pressed="false">Play as the OS</button>
+          <button id="snd" class="mode snd" aria-pressed="true">Sound on</button>
+        </div>
+        <div class="score" id="score" hidden></div>
+      </div>
+      <div class="card">
+        <div class="stage">
+          <div class="ticket" id="ticket"></div>
+          <div class="rack" id="rack"></div>
+        </div>
+        <div class="quad" id="quad" hidden></div>
+        <p class="why" id="why"></p>
+        <div class="ctrl">
+          <button id="first">Reset</button>
+          <button id="prev">Back</button>
+          <button id="play">Play</button>
+          <button id="next">Step</button>
+          <button id="last">End</button>
+          <span class="pos" id="pos"></span>
+          <label class="speed" for="spd">Speed <input id="spd" type="range" min="1" max="10" value="5"></label>
+        </div>
+      </div>
+      <div class="tl">
+        <h2 id="tlh">Timeline</h2>
+        <div class="card scroll"><table class="grid" id="grid"></table></div>
+        <div class="legend" id="legend"><span><i style="background:var(--fault)"></i>Page fault, page loaded</span><span><i style="background:var(--hit)"></i>Hit</span><span>Click a column to jump to that step. Arrow keys step too.</span></div>
+      </div>
+    </section>
+    <aside class="side">
+      <div class="card">
+        <h2>The race</h2>
+        <p class="lead" id="racelead"></p>
+        <div class="race" id="race"></div>
+        <p class="win" id="win"></p>
+      </div>
+      <div class="card">
+        <h2>Faults as frames grow</h2>
+        <p class="lead">Same string, 1 to 8 frames. The ring marks your current setting.</p>
+        <div class="fig"><svg id="chart" role="img" aria-label="Page faults by number of frames for each algorithm"></svg></div>
+        <p class="belady" id="belady"></p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<section class="band sec">
+  <div class="wrap">
+    <h2>How each one picks a victim</h2>
+    <div class="algs">
+      <article style="--c:var(--fifo)"><h3>FIFO<span>First in, first out</span></h3><p>Evicts the page that has been in memory longest, whether or not it is still busy. Cheap to run with a queue, but it can throw out a hot page and is the classic case of Belady's anomaly.</p></article>
+      <article style="--c:var(--lru)"><h3>LRU<span>Least recently used</span></h3><p>Evicts the page whose last use is furthest in the past. It tracks locality well and never shows Belady's anomaly, but true LRU needs a timestamp or stack update on every access.</p></article>
+      <article style="--c:var(--lfu)"><h3>LFU<span>Least frequently used</span></h3><p>Evicts the page with the fewest uses since it was loaded. Good when popularity is stable; slow to forget a page that was busy long ago. Ties go to the oldest page.</p></article>
+      <article style="--c:var(--mfu)"><h3>MFU<span>Most frequently used</span></h3><p>Evicts the page with the most uses, betting that a heavily used page has finished its work and a newcomer is about to be needed. Rarely wins in practice. Ties go to the oldest page.</p></article>
+    </div>
+    <p class="foot">Use counts start at 1 when a page is loaded and reset when it is evicted. Every algorithm fills empty frames first, left to right.</p>
+  </div>
+</section>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const ALGS=[{id:'FIFO',c:'var(--fifo)'},{id:'LRU',c:'var(--lru)'},{id:'LFU',c:'var(--lfu)'},{id:'MFU',c:'var(--mfu)'}];
+const PRE={classic:{n:3,s:'7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1'},belady:{n:3,s:'1 2 3 4 1 2 5 1 2 3 4 5'},hot:{n:3,s:'1 2 1 3 1 4 1 2 1 5 1 3 1 6 1 2'},scan:{n:4,s:'1 2 3 4 5 1 2 3 4 5 1 2 3 4 5'}};
+const st={ref:[],n:3,alg:'LRU',t:0,quiz:false,pend:null,all:false};
+const LEG1=document.querySelector('#legend').innerHTML;
+let runs={},timer=null,sound=true,ac=null;
+const sc={pts:0,streak:0,best:0,right:0,tries:0};
+const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const YAY=['Nailed it!','Big brain move!','Kernel-level genius!','Evicted with style!','The scheduler salutes you!'];
+const NAY=['Oof, not that one.','Nope!','The OS disagrees.','So close. Not really.'];
+const any=a=>a[Math.floor(Math.random()*a.length)];
+function tone(f1,f2,d,type,vol,delay){
+  if(!sound)return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const t0=ac.currentTime+(delay||0),o=ac.createOscillator(),g=ac.createGain();
+    o.type=type;o.frequency.setValueAtTime(f1,t0);o.frequency.exponentialRampToValueAtTime(f2,t0+d);
+    g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+d);
+    o.connect(g);g.connect(ac.destination);o.start(t0);o.stop(t0+d+.03);
+  }catch(e){}
+}
+const SFX={
+  hit:()=>tone(880,1320,.12,'sine',.12),
+  fault:()=>tone(300,150,.16,'triangle',.2),
+  evict:()=>tone(700,110,.3,'sawtooth',.035),
+  ask:()=>tone(660,990,.1,'sine',.08),
+  ok:()=>[523,659,784].forEach((f,i)=>tone(f,f*1.01,.14,'sine',.12,i*.08)),
+  bad:()=>tone(190,110,.3,'square',.05),
+  win:()=>[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,f*1.01,.16,'triangle',.12,i*.1))
+};
+let cv=null,parts=[],raf=0;
+function confetti(x,y,n,up){
+  if(calm)return;
+  if(!cv){cv=document.createElement('canvas');cv.id='fx';document.body.appendChild(cv)}
+  const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;
+  const cols=['#ff7a2f','#1f8bff','#a35cff','#f5b400','#ff2e6e','#00b894'];
+  for(let i=0;i<n;i++){const a=up?-Math.PI/2+(Math.random()-.5)*1.6:Math.random()*Math.PI*2,v=up?7+Math.random()*9:3+Math.random()*6;parts.push({x:x+(up?(Math.random()-.5)*innerWidth:0),y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:Math.random()*6,vr:(Math.random()-.5)*.4,w:6+Math.random()*7,c:cols[i%6],l:90+Math.random()*50})}
+  if(!raf)raf=requestAnimationFrame(tick);
+}
+function tick(){
+  const d=devicePixelRatio||1,x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,innerWidth,innerHeight);
+  parts=parts.filter(p=>p.l-->0&&p.y<innerHeight+20);
+  for(const p of parts){p.vy+=.25;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.w/4,p.w,p.w/2);x.restore()}
+  raf=parts.length?requestAnimationFrame(tick):0;
+  if(!raf)x.clearRect(0,0,innerWidth,innerHeight);
+}
+const face='<span class="face"><i></i><i></i><b></b></span>';
+
+const better={
+  FIFO:(a,b)=>a.load<b.load,
+  LRU:(a,b)=>a.last<b.last,
+  LFU:(a,b)=>a.cnt<b.cnt||(a.cnt===b.cnt&&a.load<b.load),
+  MFU:(a,b)=>a.cnt>b.cnt||(a.cnt===b.cnt&&a.load<b.load)
+};
+function pick(fr,alg){let b=0;for(let k=1;k<fr.length;k++)if(better[alg](fr[k],fr[b]))b=k;return b}
+function tie(fr,i,alg){return fr.filter(f=>f.cnt===fr[i].cnt).length>1}
+function reason(fr,i,alg){
+  const f=fr[i];
+  if(alg==='FIFO')return `Page ${f.p} has been in memory longest, since step ${f.load+1}.`;
+  if(alg==='LRU')return `Page ${f.p} was used least recently, last at step ${f.last+1}.`;
+  const t=tie(fr,i,alg)?` Several pages share that count, so the oldest one goes.`:'';
+  if(alg==='LFU')return `Page ${f.p} has the fewest uses: ${f.cnt}.${t}`;
+  return `Page ${f.p} has the most uses: ${f.cnt}.${t}`;
+}
+function sim(ref,n,alg){
+  const fr=[],out=[];let faults=0;
+  ref.forEach((p,t)=>{
+    let i=fr.findIndex(f=>f.p===p),hit=i>=0,victim=null,why='';
+    if(hit){fr[i].last=t;fr[i].cnt++;why=`Page ${p} is already in frame ${i+1}. Nothing moves; its use data updates.`}
+    else{
+      faults++;
+      if(fr.length<n){i=fr.length;fr.push(null);why=`Page ${p} is not in memory, but frame ${i+1} is free, so it loads there.`}
+      else{i=pick(fr,alg);victim=fr[i].p;why=`Page ${p} is not in memory and every frame is full. ${reason(fr,i,alg)} It is evicted from frame ${i+1}.`}
+      fr[i]={p,load:t,last:t,cnt:1};
+    }
+    out.push({p,hit,slot:i,victim,why,faults,frames:fr.map(f=>({...f}))});
+  });
+  return out;
+}
+function faultsFor(ref,n,alg){const r=sim(ref,n,alg);return r.length?r[r.length-1].faults:0}
+
+function parse(s){
+  const toks=s.toUpperCase().split(/[\s,;]+/).filter(Boolean);
+  if(!toks.length)return{err:'Enter at least one page.'};
+  if(toks.some(x=>!/^[A-Z]?\d{1,2}$/.test(x)))return{err:'Each request is a page number from 0 to 99, optionally with a process letter in front, like B3.'};
+  const nums=toks.map(x=>/^\d/.test(x)?String(+x):x[0]+(+x.slice(1)));
+  if(nums.length>40)return{err:'Up to 40 references, please. Only the first 40 are used.',ref:nums.slice(0,40)};
+  return{ref:nums};
+}
+function save(){try{localStorage.setItem('prlab',JSON.stringify({s:$('#refs').value,n:st.n,alg:st.alg,all:st.all,g:G}))}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem('prlab')||'null')}catch(e){return null}}
+
+function setRef(fromInput){
+  const r=parse($('#refs').value);
+  $('#err').textContent=r.err||'';
+  if(!r.ref)return;
+  st.ref=r.ref;
+  if(!fromInput)st.t=0;
+  const procs=new Set(st.ref.map(x=>/^\d/.test(x)?'#':x[0])).size,pages=new Set(st.ref).size;
+  $('#summary').innerHTML=`<b>${st.ref.length}</b> requests · <b>${procs}</b> process${procs>1?'es':''} · <b>${pages}</b> distinct pages`;
+  recompute();save();
+}
+function recompute(){
+  st.pend=null;runs={};ALGS.forEach(a=>runs[a.id]=sim(st.ref,st.n,a.id));
+  st.t=Math.max(0,Math.min(st.t,st.ref.length-1));
+  $('#nval').textContent=st.n;
+  render();draw();
+}
+const col=id=>ALGS.find(a=>a.id===id).c;
+
+function render(){
+  const R=runs[st.alg],s=R[st.t],c=col(st.alg);
+  document.querySelectorAll('.card,.why').forEach(e=>e.style.setProperty('--c',c));
+  $('#tabs').innerHTML=ALGS.map(a=>`<button class="tab" style="--c:${a.c}" data-a="${a.id}" aria-pressed="${!st.all&&a.id===st.alg}"><i></i>${a.id}</button>`).join('')+`<button class="tab alltab" data-v="all" aria-pressed="${st.all}"><i></i>All four</button>`;
+  $('.stage').hidden=st.all;$('#quad').hidden=!st.all;
+  $('#quiz').setAttribute('aria-pressed',st.quiz);
+  if(st.all){renderAll();return}
+  $('#legend').innerHTML=LEG1;
+  const pend=st.pend!==null,q=pend?R[st.pend]:null;
+  $('#ticket').innerHTML=pend
+    ?`<small>Request ${st.pend+1} of ${st.ref.length}</small><div class="pg">${q.p}</div><span class="badge ask">Your call</span><span class="evict">Click the page to kick out</span>`
+    :`<small>Request ${st.t+1} of ${st.ref.length}</small><div class="pg">${s.p}</div><span class="badge ${s.hit?'hit':''}">${s.hit?'Hit!':'Page fault'}</span>`+(s.victim!==null?`<span class="evict">Evicted <s>${s.victim}</s></span>`:'');
+  const full=!pend&&!st.quiz&&s.frames.length===st.n&&st.t<st.ref.length-1;
+  const nx=full?pick(s.frames,st.alg):-1;
+  let h='';
+  for(let k=0;k<st.n;k++){
+    const f=s.frames[k];
+    if(!f){h+=`<div class="slot empty"><span class="fn">#${k+1}</span><span class="meta">empty</span></div>`;continue}
+    const meta=st.alg==='FIFO'?`in since ${f.load+1}`:st.alg==='LRU'?`used at ${f.last+1}`:`${f.cnt} use${f.cnt>1?'s':''}`;
+    if(pend){h+=`<button class="slot pick" data-k="${k}" aria-label="Evict page ${f.p} from frame ${k+1}">${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></button>`;continue}
+    const cls=(k===s.slot?(s.hit?'hit':'in'):'')+(k===nx?' scared':'');
+    h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out!</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></div>`;
+  }
+  $('#rack').innerHTML=h;
+  $('#why').className='why';
+  $('#why').textContent=pend?`Page ${q.p} needs a seat and all ${st.n} frames are full. You're ${st.alg}: who gets the boot?`:s.why;
+  const sb=$('#score');sb.hidden=!st.quiz;
+  if(st.quiz)sb.innerHTML=`<span class="pts"><b>${sc.pts}</b> pts</span><span class="${sc.streak>=3?'hot':''}">Streak <b>${sc.streak}</b></span><span>Best <b>${sc.best}</b></span><span><b>${sc.right}</b>/${sc.tries} right</span>`;
+  $('#quiz').setAttribute('aria-pressed',st.quiz);
+  $('#pos').textContent=`${s.faults} fault${s.faults===1?'':'s'} so far`;
+  $('#play').textContent=timer?'Pause':'Play';
+  $('#tlh').textContent=`${st.alg} timeline, ${st.n} frame${st.n>1?'s':''}`;
+  let g='<thead><tr><th class="rl">Request</th>'+st.ref.map((p,j)=>`<th class="${j===st.t?'cur':''}"><button data-j="${j}" aria-label="Step ${j+1}, page ${p}">${p}</button></th>`).join('')+'</tr></thead><tbody>';
+  for(let k=0;k<st.n;k++){
+    g+=`<tr><th class="rl">Frame ${k+1}</th>`;
+    R.forEach((x,j)=>{
+      if(j>st.t){g+='<td class="fut"></td>';return}
+      const f=x.frames[k];const cl=[x.slot===k?(x.hit?'hc':'new'):'',j===st.t?'cur':''].join(' ');
+      g+=`<td class="${cl}">${f?f.p:''}</td>`;
+    });
+    g+='</tr>';
+  }
+  g+='<tr class="res"><th class="rl">Result</th>'+R.map((x,j)=>j>st.t?'<td></td>':`<td class="${x.hit?'H':'F'}">${x.hit?'H':'F'}</td>`).join('')+'</tr></tbody>';
+  $('#grid').innerHTML=g;
+  const cur=$('#grid thead th.cur');
+  if(cur){const sc=cur.closest('.scroll');const L=cur.offsetLeft-sc.clientWidth/2;sc.scrollLeft=Math.max(0,L)}
+  renderRace();
+}
+function renderAll(){
+  const t=st.t,len=st.ref.length;
+  document.querySelectorAll('.card,.why').forEach(e=>e.style.setProperty('--c','var(--ink)'));
+  const best=Math.min(...ALGS.map(a=>runs[a.id][t].faults));
+  const boards=ALGS.map(a=>{
+    const s=runs[a.id][t],full=s.frames.length===st.n&&t<len-1,nx=full?pick(s.frames,a.id):-1;
+    let h='';
+    for(let k=0;k<st.n;k++){
+      const f=s.frames[k];
+      if(!f){h+=`<div class="slot empty"><span class="fn">#${k+1}</span><span class="meta">empty</span></div>`;continue}
+      const meta=a.id==='FIFO'?`in ${f.load+1}`:a.id==='LRU'?`used ${f.last+1}`:`×${f.cnt}`;
+      const cls=(k===s.slot?(s.hit?'hit':'in'):'')+(k===nx?' scared':'');
+      h+=`<div class="slot ${cls}">${k===nx?'<span class="next">Next out</span>':''}${face}<span class="fn">#${k+1}</span><span class="no${(String(f.p).length>2||/[A-Z]/.test(f.p))?' sm':''}">${f.p}</span><span class="meta">${meta}</span></div>`;
+    }
+    return `<article class="mini ${s.faults===best?'lead':''}" style="--c:${a.c}"><header><b>${a.id}</b><span>${s.faults} fault${s.faults===1?'':'s'}</span></header><div class="mbody"><p class="mres"><span class="badge ${s.hit?'hit':''}">${s.hit?'Hit!':'Fault'}</span>${s.victim!==null?`<span class="evict">Evicted <s>${s.victim}</s></span>`:s.hit?'':'<span class="evict">Free frame</span>'}</p><div class="rack" data-alg="${a.id}">${h}</div></div></article>`;
+  }).join('');
+  $('#quad').innerHTML=`<div class="qhead">Request ${t+1} of ${len}<b>${st.ref[t]}</b></div><div class="boards">${boards}</div>`;
+  const leaders=ALGS.filter(a=>runs[a.id][t].faults===best).map(a=>a.id);
+  const tilted=leaders.length===4?'All four are tied':`${leaders.join(' and ')} ${leaders.length>1?'share the lead':'leads'}`;
+  $('#why').className='why';
+  $('#why').textContent=`${tilted} with ${best} fault${best===1?'':'s'} after ${t+1} request${t?'s':''}. Tilted boards are in the lead; scared chips are next in line to go.`;
+  $('#pos').textContent='';
+  $('#play').textContent=timer?'Pause':'Play';
+  $('#score').hidden=true;
+  $('#tlh').textContent=`All four timelines, ${st.n} frame${st.n>1?'s':''}`;
+  let g='<thead><tr><th class="rl">Request</th>'+st.ref.map((p,j)=>`<th class="${j===t?'cur':''}"><button data-j="${j}" aria-label="Step ${j+1}, page ${p}">${p}</button></th>`).join('')+'<th class="rl">Faults</th></tr></thead><tbody>';
+  ALGS.forEach(a=>{
+    const R=runs[a.id];
+    g+=`<tr><th class="rl" style="color:${a.c};font:700 16px Fredoka,system-ui,sans-serif">${a.id}</th>`+R.map((x,j)=>j>t?'<td class="fut"></td>':`<td class="${x.hit?'hc':'new'} ${j===t?'cur':''}">${x.hit?'H':x.victim!==null?x.victim:'·'}</td>`).join('')+`<td class="cnt">${R[t].faults}</td></tr>`;
+  });
+  $('#grid').innerHTML=g+'</tbody>';
+  $('#legend').innerHTML='<span><i style="background:var(--fault)"></i>Fault: the number is the page it evicted (· means a free frame was used)</span><span><i style="background:var(--hit)"></i>Hit</span><span>Click a column to jump there.</span>';
+  const cur=$('#grid thead th.cur');
+  if(cur){const sc=cur.closest('.scroll');sc.scrollLeft=Math.max(0,cur.offsetLeft-sc.clientWidth/2)}
+  renderRace();
+}
+function renderRace(){
+  const t=st.t,done=t+1;
+  $('#racelead').textContent=`Faults after ${done} of ${st.ref.length} requests. Bar length is the fault rate so far.`;
+  $('#race').innerHTML=ALGS.map(a=>{
+    const x=runs[a.id][t],rate=x.faults/done,tot=runs[a.id][st.ref.length-1].faults;
+    return `<button class="row ${a.id===st.alg?'on':''}" style="--c:${a.c}" data-a="${a.id}"><b>${a.id}</b><span class="bar"><span style="width:${(rate*100).toFixed(1)}%"></span></span><span class="num"><strong>${x.faults}</strong><small>${Math.round((1-rate)*100)}% hits · ${tot} total</small></span></button>`;
+  }).join('');
+  const tots=ALGS.map(a=>({id:a.id,f:runs[a.id][st.ref.length-1].faults}));
+  const min=Math.min(...tots.map(x=>x.f)),best=tots.filter(x=>x.f===min).map(x=>x.id);
+  $('#win').textContent=`Over the whole string, ${best.join(' and ')} ${best.length>1?'tie':'wins'} with ${min} faults.`;
+  if(t===st.ref.length-1)document.querySelectorAll('#race .row').forEach(r=>{if(best.includes(r.dataset.a)){r.classList.add('champ');r.querySelector('b').insertAdjacentHTML('beforeend','<span class="tag">Winner</span>')}});
+}
+
+const svg=$('#chart');
+function draw(){
+  const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H||!st.ref.length)return;
+  const N=8,data=ALGS.map(a=>({...a,v:Array.from({length:N},(_,i)=>faultsFor(st.ref,i+1,a.id))}));
+  const ymax=st.ref.length,m={l:34,r:W<420?46:58,t:12,b:34};
+  const x=i=>m.l+(W-m.l-m.r)*i/(N-1),y=v=>m.t+(H-m.t-m.b)*(1-v/ymax);
+  const step=ymax>20?10:ymax>10?5:2;
+  let h='';
+  for(let v=0;v<=ymax;v+=step)h+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+  for(let i=0;i<N;i++)h+=`<text x="${x(i)}" y="${H-12}" text-anchor="middle">${i+1}</text>`;
+  h+=`<line x1="${x(st.n-1)}" x2="${x(st.n-1)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--ink)" stroke-dasharray="3 4" opacity=".4"/>`;
+  data.forEach(d=>{
+    const on=d.id===st.alg;
+    h+=`<polyline fill="none" stroke="${d.c}" stroke-width="${on?3.5:2}" opacity="${on?1:.75}" points="${d.v.map((v,i)=>x(i)+','+y(v)).join(' ')}"/>`;
+    h+=d.v.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${i===st.n-1?6:3}" fill="${i===st.n-1?'var(--panel)':d.c}" stroke="${d.c}" stroke-width="2.5"/>`).join('');
+  });
+  const labs=data.map(d=>({id:d.id,c:d.c,y:y(d.v[N-1])})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labs.length;i++)if(labs[i].y-labs[i-1].y<15)labs[i].y=labs[i-1].y+15;
+  h+=labs.map(l=>`<text x="${W-m.r+8}" y="${l.y+4}" style="fill:${l.c};font-weight:700">${l.id}</text>`).join('');
+  h+=`<text x="${(m.l+W-m.r)/2}" y="${H-0}" text-anchor="middle" dy="-0">frames</text>`;
+  svg.innerHTML=h;
+  const bel=data.map(d=>{for(let i=0;i<N-1;i++)if(d.v[i+1]>d.v[i])return `${d.id} (${i+1} frames: ${d.v[i]} faults, ${i+2} frames: ${d.v[i+1]})`;return null}).filter(Boolean);
+  $('#belady').textContent=bel.length?`Belady's anomaly: adding a frame makes things worse for ${bel.join('; ')}.`:`No Belady's anomaly here: more frames never adds faults for any algorithm on this string.`;
+}
+const ro=new ResizeObserver(draw);ro.observe(svg);
+
+function go(t,force){
+  t=Math.max(0,Math.min(st.ref.length-1,t));
+  if(st.pend!==null){if(force||t<=st.t)st.pend=null;else return}
+  if(!force&&st.quiz&&!st.all&&t===st.t+1&&runs[st.alg][t].victim!==null){st.pend=t;stop();render();SFX.ask();return}
+  const fwd=t===st.t+1;st.t=t;render();
+  if(fwd)fx();
+}
+const lbl=p=>`<span class="no${(String(p).length>2||/[A-Z]/.test(p))?' sm':''}">${p}</span>`;
+function spawn(cls,css,html){const d=document.createElement('div');d.className=cls;d.style.cssText=css;if(html)d.innerHTML=html;document.body.appendChild(d);return d}
+function puffs(x,y,k){
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2+Math.random()*.5,r=40+Math.random()*30,z=14+Math.random()*16;
+    const d=spawn('puff',`left:${x}px;top:${y}px;width:${z}px;height:${z}px`);
+    d.animate([{transform:'translate(-50%,-50%) scale(.3)',opacity:.95},{transform:`translate(calc(-50% + ${Math.cos(a)*r}px),calc(-50% + ${Math.sin(a)*r}px)) scale(1.5)`,opacity:0}],{duration:650*k,easing:'ease-out'}).onfinish=()=>d.remove();
+  }
+}
+function pop(x,y,text,col,k){
+  const d=spawn('pop',`left:${x}px;top:${y}px;background:${col}`,text);
+  d.animate([{transform:'translate(-50%,0) scale(.5)',opacity:0},{transform:'translate(-50%,-26px) scale(1.15)',opacity:1,offset:.3},{transform:'translate(-50%,-52px) scale(1)',opacity:0}],{duration:850*k,easing:'ease-out'}).onfinish=()=>d.remove();
+}
+function land(el,s,k){
+  if(!el.isConnected)return;
+  el.classList.remove('await','free');
+  const r=el.getBoundingClientRect();
+  el.animate([{transform:'translateY(-16px) scale(1.06,.92)'},{transform:'translateY(0) scale(1.16,.8)',offset:.35},{transform:'scale(.93,1.09)',offset:.65},{transform:'none'}],{duration:450*k,easing:'ease-out'});
+  if(s.hit){pop(r.left+r.width/2,r.top-4,'Hit!','var(--hit)',k);return}
+  const g=spawn('ring',`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`);
+  g.animate([{transform:'scale(1)',opacity:1},{transform:'scale(1.4)',opacity:0}],{duration:500*k,easing:'ease-out'}).onfinish=()=>g.remove();
+  pop(r.left+r.width/2,r.top-4,'In!','var(--fault)',k);
+}
+function fx(){
+  const list=st.all?ALGS.map(a=>({s:runs[a.id][st.t],rack:document.querySelector(`#quad .rack[data-alg="${a.id}"]`)})):[{s:runs[st.alg][st.t],rack:$('#rack')}];
+  const anyFault=list.some(x=>!x.s.hit),anyKick=list.some(x=>x.s.victim!==null);
+  const done=()=>{if(st.t===st.ref.length-1){SFX.win();confetti(innerWidth/2,innerHeight,160,true)}};
+  if(anyKick)SFX.evict();
+  const src=st.all?$('#quad .qhead b'):$('#ticket .pg');
+  if(calm||!src){anyFault?SFX.fault():SFX.hit();done();return}
+  const k=timer?Math.max(.2,Math.min(1,(1300-$('#spd').value*115)/900)):1;
+  const sr=src.getBoundingClientRect(),sx=sr.left+sr.width/2,sy=sr.top+sr.height/2;
+  src.animate([{transform:'scale(1)'},{transform:'scale(.75) rotate(-6deg)'},{transform:'scale(1)'}],{duration:300*k});
+  let played=false,left=list.length;
+  list.forEach(({s,rack})=>{
+    const el=rack&&rack.children[s.slot];
+    if(!el){if(!--left)done();return}
+    const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,kick=s.victim!==null;
+    if(kick){
+      const g=spawn('slot ghost',`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;background:var(--chip)`,`<span class="bubble">bye!</span>${face}<span class="fn">#${s.slot+1}</span>${lbl(s.victim)}<span class="meta">evicted</span>`);
+      const dx=(cx<innerWidth/2?-1:1)*(140+Math.random()*90);
+      g.animate([{transform:'none'},{transform:'rotate(-7deg)',offset:.08},{transform:'rotate(7deg)',offset:.16},{transform:'rotate(-5deg)',offset:.24},{transform:'translateY(-10px) scale(1.05)',offset:.32},{transform:`translate(${dx*.45}px,-110px) rotate(${dx/7}deg)`,offset:.6},{transform:`translate(${dx}px,${innerHeight-r.top+40}px) rotate(${dx/2.5}deg)`,opacity:.9}],{duration:1150*k,easing:'cubic-bezier(.4,0,.7,1)'}).onfinish=()=>g.remove();
+      setTimeout(()=>puffs(cx,cy,k),330*k);
+    }
+    if(!s.hit){el.classList.add('await');if(!kick)el.classList.add('free')}
+    const t=spawn('token',`left:${sx}px;top:${sy}px`,String(s.p));
+    const dx=cx-sx,dy=cy-sy;
+    t.animate([{transform:'translate(-50%,-50%) scale(.5)',opacity:0},{transform:'translate(-50%,-50%) scale(1.15)',opacity:1,offset:.15},{transform:`translate(calc(-50% + ${dx*.5}px),calc(-50% + ${dy*.5-100}px)) rotate(-12deg)`,offset:.55},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.75)`,opacity:1}],{duration:600*k,delay:kick?420*k:60*k,easing:'cubic-bezier(.45,0,.55,1)',fill:'backwards'}).onfinish=()=>{
+      t.remove();land(el,s,k);
+      if(!played){played=true;anyFault?SFX.fault():SFX.hit()}
+      if(!--left)done();
+    };
+  });
+}
+function answer(k){
+  const i=st.pend,R=runs[st.alg],ok=R[i].slot===k,picked=R[i-1].frames[k].p,el=$('#rack').children[k];
+  sc.tries++;
+  if(ok){sc.right++;sc.streak++;sc.best=Math.max(sc.best,sc.streak);sc.pts+=10+(sc.streak-1)*5;SFX.ok();const r=el.getBoundingClientRect();confetti(r.left+r.width/2,r.top+r.height/2,50,false)}
+  else{sc.streak=0;SFX.bad()}
+  st.pend=null;st.t=i;render();fx();
+  const w=$('#why');w.className='why '+(ok?'good':'bad');
+  w.textContent=ok?`${any(YAY)} ${R[i].why}`:`${any(NAY)} You picked page ${picked}. ${R[i].why}`;
+}
+function stop(){clearInterval(timer);timer=null;$('#play').textContent='Play'}
+function play(){
+  if(timer){stop();return}
+  if(st.t>=st.ref.length-1)st.t=0;
+  const ms=1300-$('#spd').value*115;
+  timer=setInterval(()=>{if(st.t>=st.ref.length-1){stop();return}go(st.t+1)},ms);
+  render();
+}
+const G={procs:2,pages:4,len:20,loc:70};
+const GL={procs:[1,6],pages:[1,12],len:[5,40]};
+function genRef(){
+  const P=G.procs,out=[],name=(p,k)=>P>1?String.fromCharCode(65+p)+k:String(k);
+  const recent=Array.from({length:P},()=>[]);
+  let cur=Math.floor(Math.random()*P);
+  for(let i=0;i<G.len;i++){
+    if(P>1&&i&&Math.random()<.35)cur=(cur+1+Math.floor(Math.random()*(P-1)))%P;
+    const r=recent[cur];let k;
+    if(r.length&&Math.random()*100<G.loc)k=r[Math.floor(Math.random()*r.length)];
+    else k=Math.floor(Math.random()*G.pages);
+    let tries=0;while(name(cur,k)===out[out.length-1]&&G.pages>1&&tries++<8)k=Math.floor(Math.random()*G.pages);
+    r.push(k);if(r.length>3)r.shift();
+    out.push(name(cur,k));
+  }
+  return out.join(' ');
+}
+function showGen(){for(const k of ['procs','pages','len'])$('#g-'+k).textContent=G[k];$('#g-loc').value=G.loc;$('#g-locv').textContent=G.loc+'%'}
+function generate(){showGen();stop();$('#refs').value=genRef();setRef(false)}
+function randomRef(){
+  let s=Date.now()%2147483647||7;const r=()=>(s=s*16807%2147483647)/2147483647;
+  const out=[];let base=Math.floor(r()*4);
+  for(let i=0;i<20;i++){if(r()<.2)base=Math.floor(r()*5);out.push(r()<.75?base+Math.floor(r()*3):Math.floor(r()*8))}
+  return out.join(' ');
+}
+
+document.addEventListener('click',e=>{
+  const kk=e.target.closest('[data-k]');if(kk&&st.pend!==null){answer(+kk.dataset.k);return}
+  const v=e.target.closest('[data-v]');if(v){st.all=true;st.quiz=false;st.pend=null;render();draw();save();return}
+  const a=e.target.closest('[data-a]');if(a){st.alg=a.dataset.a;st.all=false;st.pend=null;render();draw();save();return}
+  const j=e.target.closest('[data-j]');if(j){stop();go(+j.dataset.j,true);return}
+  const gb=e.target.closest('[data-g]');
+  if(gb){const k=gb.dataset.g,[lo,hi]=GL[k];G[k]=Math.min(hi,Math.max(lo,G[k]+(+gb.dataset.d)));generate();return}
+  const p=e.target.closest('[data-p]');
+  if(p){stop();const k=p.dataset.p;$('#refs').value=PRE[k].s;st.n=PRE[k].n;setRef(false)}
+});
+$('#shuffle').onclick=generate;
+$('#g-loc').oninput=()=>{G.loc=+$('#g-loc').value;generate()};
+$('#refs').addEventListener('input',()=>{stop();setRef(true)});
+$('#nminus').onclick=()=>{if(st.n>1){st.n--;recompute();save()}};
+$('#nplus').onclick=()=>{if(st.n<8){st.n++;recompute();save()}};
+$('#first').onclick=()=>{stop();go(0,true)};
+$('#quiz').onclick=()=>{st.quiz=!st.quiz;if(st.quiz)st.all=false;st.pend=null;Object.assign(sc,{pts:0,streak:0,right:0,tries:0});stop();
+  if(st.quiz){st.t=0;render();$('#why').textContent=`Game on! Press Step or Play. Whenever memory is full, you decide which page ${st.alg} evicts. 10 points a hit, streaks earn bonuses.`;SFX.ask()}else render()};
+$('#snd').onclick=()=>{sound=!sound;$('#snd').setAttribute('aria-pressed',sound);$('#snd').textContent=sound?'Sound on':'Sound off'};
+$('#prev').onclick=()=>{stop();go(st.t-1)};
+$('#next').onclick=()=>{stop();go(st.t+1)};
+$('#last').onclick=()=>{stop();go(st.ref.length-1,true)};
+$('#play').onclick=play;
+$('#spd').oninput=()=>{if(timer){stop();play()}};
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input'))return;
+  if(e.key==='ArrowRight'){stop();go(st.t+1)}
+  else if(e.key==='ArrowLeft'){stop();go(st.t-1)}
+  else if(e.key===' '&&!e.target.matches('button')){e.preventDefault();play()}
+});
+
+const saved=load();
+if(saved&&saved.s){$('#refs').value=saved.s;st.n=Math.min(8,Math.max(1,saved.n|0||3));if(ALGS.some(a=>a.id===saved.alg))st.alg=saved.alg;st.all=!!saved.all;if(saved.g)for(const k of Object.keys(G)){const v=+saved.g[k];if(Number.isFinite(v))G[k]=k==='loc'?Math.min(100,Math.max(0,v)):Math.min(GL[k][1],Math.max(GL[k][0],v))}}
+else{$('#refs').value=PRE.classic.s}
+showGen();setRef(false);
+st.t=Math.min(8,st.ref.length-1);render();
+}
+</script>
+</body>
