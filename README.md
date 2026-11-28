@@ -1,6 +1,6 @@
 # Page Replacement Lab
 
-An interactive, playful simulator for four page replacement algorithms: **FIFO, LRU, LFU and MFU**. Feed a reference string into memory, step through it one request at a time, and watch each algorithm decide which page to evict, with an explanation for every decision.
+An interactive, 8-bit arcade-style simulator for four page replacement algorithms: **FIFO, LRU, LFU and MFU**. Feed a reference string into memory, step through it one request at a time, and watch each algorithm decide which page to evict, with an explanation for every decision.
 
 The whole app is a single file, `index.html`, with no build step and no dependencies.
 
@@ -22,7 +22,8 @@ The whole app is a single file, `index.html`, with no build step and no dependen
 - **Play as the OS:** a game mode. Whenever memory is full, you pick the page the algorithm would evict. You get points, streak bonuses and feedback on each answer.
 - **Algorithm demos:** each algorithm card has a looping mini simulation showing how it picks a victim, and each header mascot moves in its own style.
 - **Metric bars:** every memory chip has a yellow bar showing what the algorithm watches: time in memory (FIFO), time since last use (LRU) or number of uses (LFU, MFU).
-- **Animations and sound:** pages fly from the request ticket into their frame, evicted pages get kicked out with a "bye!" and a puff of smoke, plus confetti and sound effects. Sound can be switched off, and animations turn off automatically if the device is set to reduce motion.
+- **8-bit arcade look:** pixel fonts (Press Start 2P and Pixelify Sans), the PICO-8 colour palette, CRT scanlines, bevelled arcade buttons and pixel-invader mascots.
+- **Animations and sound:** chiptune sound effects; pages fly from the request ticket into their frame, evicted pages get kicked out with a "bye!" and a puff of smoke, plus confetti and sound effects. Sound can be switched off, and animations turn off automatically if the device is set to reduce motion.
 
 ![All four algorithms side by side](screenshots/all-four.png)
 
@@ -56,8 +57,7 @@ With more than one process, all processes share the same frames (**global replac
 Check: on the textbook string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1` with 3 frames, FIFO gives 15 faults and LRU gives 12.
 
 ![Play as the OS mode](screenshots/play-as-the-os.png)
-![Eviction animation in the All four view](screenshots/animations.png)
 ![Looping demos for each algorithm](screenshots/algorithm-demos.png)
-![Dark mode](screenshots/dark-mode.png)
+![On a phone](screenshots/phone.png)
 
 Your settings are remembered in your browser (localStorage) between visits.
