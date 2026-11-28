@@ -1,6 +1,6 @@
 # Page Replacement Lab
 
-An interactive, 8-bit arcade-style simulator for four page replacement algorithms: **FIFO, LRU, LFU and MFU**. Feed a reference string into memory, step through it one request at a time, and watch each algorithm decide which page to evict, with an explanation for every decision.
+An interactive, train-yard-themed simulator for four page replacement algorithms: **FIFO, LRU, LFU and MFU**. Feed a reference string into memory, step through it one request at a time, and watch each algorithm decide which page to evict, with an explanation for every decision.
 
 The whole app is a single file, `index.html`, with no build step and no dependencies.
 
@@ -22,8 +22,8 @@ The whole app is a single file, `index.html`, with no build step and no dependen
 - **Play as the OS:** a game mode. Whenever memory is full, you pick the page the algorithm would evict. You get points, streak bonuses and feedback on each answer.
 - **Algorithm demos:** each algorithm card has a looping mini simulation showing how it picks a victim, and each header mascot moves in its own style.
 - **Metric bars:** every memory chip has a yellow bar showing what the algorithm watches: time in memory (FIFO), time since last use (LRU) or number of uses (LFU, MFU).
-- **8-bit arcade look:** pixel fonts (Press Start 2P and Pixelify Sans), the PICO-8 colour palette, CRT scanlines, bevelled arcade buttons and pixel-invader mascots.
-- **Animations and sound:** chiptune sound effects; pages fly from the request ticket into their frame, evicted pages get kicked out with a "bye!" and a puff of smoke, plus confetti and sound effects. Sound can be switched off, and animations turn off automatically if the device is set to reduce motion.
+- **Train yard look:** memory frames are tracks and pages are boxcars. New pages roll in, evicted pages depart in a puff of steam, and the timeline is a split-flap departure board. Railway green, cream and signal colours, with the Overpass signage typeface.
+- **Animations and sound:** bell, chuff and whistle sound effects; pages travel from the request ticket into their track, evicted cars pull out of the station with a "departing" sign and a puff of steam, plus confetti and sound effects. Sound can be switched off, and animations turn off automatically if the device is set to reduce motion.
 
 ![All four algorithms side by side](screenshots/all-four.png)
 
